@@ -1,0 +1,57 @@
+#!/bin/bash
+
+
+echo "WARNING : If you are using Storage Profiles and/or vCenter tags, be aware that any Storage Profiles that you are using via the vSphere Profile-Driven Storage service and all tags are lost when the Inventory Service database is reset."
+echo
+while true; do
+        read -p "Are you sure you want to continue ? (Y/N)" YN
+        case $YN in
+                [Yy]*) break;;
+                [Nn]*) exit;;
+                *) echo "Please answer Y(es) or N(o).";;
+        esac
+done
+
+vpxdVersion=`head -1 /var/log/vmware/vpx/vpxd.log | awk -F, '{ print $3 }' | awk -F= '{ print $2 }'`
+vcenterhost=`hostname --fqdn`
+vcURL="https://$vcenterhost:443/sdk/vimService"
+lookupserviceURL="https://$vcenterhost:7444/lookupservice/sdk"
+isURL="https://$vcenterhost:10443"
+
+service vmware-inventoryservice stop
+if [ $? -eq 0 ]
+then
+        rm -rf /storage/db/inventoryservice/data
+else
+        echo "ERROR : Could not stop the service vmware-inventoryservice"
+        echo "Exiting the script."
+        exit 1
+fi
+
+/usr/lib/vmware-vpx/inventoryservice/scripts/ds-invoke.sh -Dvim.logdir=/var/log/vmware/vpx/inventoryservice com.vmware.vim.dataservices.CreateDb /storage/db/inventoryservice/data changeme default changeme
+if [ $? -eq 0 ]
+then
+        service vmware-inventoryservice start
+else
+        echo "ERROR : Could not create a brand new Inventory Service database with CreateDB"
+        echo "Exiting the script"
+        exit 1
+fi
+
+case $vpxdVersion in
+5.0*)
+/usr/lib/vmware-vpx/inventoryservice/scripts/ds-invoke.sh -Dvim.logdir=/var/log/vmware/vpx/inventoryservice-registration com.vmware.vim.dataservices.provider.util.SetupLocalService -vcurl $vcURL -providercfg file:/usr/lib/vmware-vpx/inventoryservice/lib/server/config/vc-provider-registration.xml -servicecfg /usr/lib/vmware-vpx/inventoryservice/lib/server/config/dataservice.properties
+;;
+5.1*)
+/usr/lib/vmware-vpx/inventoryservice-registration/vcregtool.sh -Dvim.logdir=/var/log/vmware/vpx/inventoryservice-registration com.vmware.vim.dataservices.vcregtool.RegisterVC -action register -lookupserviceurl $lookupserviceURL -isurl $isURL -vcurl $vcURL -vccert /etc/vmware-vpx/ssl/rui.crt -vcprivkey /etc/vmware-vpx/ssl/rui.key -vcinstancecfg /etc/vmware-vpx/instance.cfg -vcendpointsdir /usr/lib/vmware-vpx/endpoints -vcextensionsdir /usr/lib/vmware-vpx/extensions
+;;
+5.5*)
+/usr/lib/vmware-vpx/inventoryservice-registration/vcregtool.sh -Dvim.logdir=/var/log/vmware/vpx/inventoryservice-registration com.vmware.vim.dataservices.vcregtool.RegisterVC -action register -lookupserviceurl $lookupserviceURL -isurl $isURL -vcurl $vcURL -vccert /etc/vmware-vpx/ssl/rui.crt -vcprivkey /etc/vmware-vpx/ssl/rui.key -vcinstancecfg /etc/vmware-vpx/instance.cfg -vcendpointsdir /usr/lib/vmware-vpx/endpoints -vcextensionsdir /usr/lib/vmware-vpx/extensions
+;;
+*)
+echo "ERROR : Could not determine the version of the vCenter Server from vpxd.log"
+echo "Exiting the script."
+exit 1
+esac
+
+service vmware-vpxd restart
