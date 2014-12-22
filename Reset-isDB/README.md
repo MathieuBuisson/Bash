@@ -1,6 +1,7 @@
 DESCRIPTION :
 
 Script to automate the steps mentioned in the KB article : http://kb.vmware.com/kb/2037952
+
 Resets the Inventory Service database and restarts the vCenter Server Service
 
 USAGE :
@@ -13,4 +14,3 @@ It detects the vCenter version and runs the appropriate commands accordingly, so
 It needs to be run locally on the vCenter Appliance and as root.
 
 The error handling is pretty basic : if a command fails, the script tells you which step failed and exits.
-
