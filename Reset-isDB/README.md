@@ -2,7 +2,7 @@ DESCRIPTION :
 
 Script to automate the steps mentioned in the KB article : http://kb.vmware.com/kb/2037952
 
-Resets the Inventory Service database on a vCenter Server Appliance.
+Resets the Inventory Service database on a vCenter Server Appliance 5.x .
 
 USAGE :
 
