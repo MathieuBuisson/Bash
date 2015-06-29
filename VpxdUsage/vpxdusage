@@ -1,0 +1,75 @@
+#!/bin/bash
+
+vpxd_profiler_log=$1
+
+cpu_min_value=$(grep /ProcessStats/ProcessorCpuUsage/mean $vpxd_profiler_log | cut -d " " -f3 | sort -n | head -n 1)
+cpu_min_percent=`expr $cpu_min_value / 100 `
+echo ""
+echo "Vpxd resource usage in the specified profiler log(s)"
+echo "----------------------------------------------------"
+echo ""
+num_samples=$(grep /ProcessStats/PhyMemUsage/mean $vpxd_profiler_log | wc -l)
+echo "Number of samples : $num_samples"
+duration_minutes=`expr $num_samples \* 5 `
+echo "Duration covered : $duration_minutes min"
+echo ""
+echo "---------------------------- CPU Usage -----------------------------"
+echo ""
+echo "Minimum CPU : $cpu_min_percent %"
+cpu_max_value=$(grep /ProcessStats/ProcessorCpuUsage/mean $vpxd_profiler_log | cut -d " " -f3 | sort -n | tail -n 1)
+cpu_max_percent=`expr $cpu_max_value / 100 `
+echo "Maximum CPU : $cpu_max_percent %"
+
+num_sample_100=$(grep /ProcessStats/ProcessorCpuUsage/mean $vpxd_profiler_log | cut -d " " -f3 | grep 10000 | wc -l)
+echo "Number of samples where CPU Usage was at 100% : $num_sample_100"
+echo ""
+echo "--------------------------- Virtual Memory -------------------------"
+echo ""
+virt_mem_min_value=$(grep /ProcessStats/VirMemUsage/mean $vpxd_profiler_log | cut -d " " -f3 | sort -n | head -n 1)
+virt_mem_min_GB=`expr $virt_mem_min_value / 1073741824 `
+echo "Minimum Virtual Memory : $virt_mem_min_GB GB"
+
+virt_mem_max_value=$(grep /ProcessStats/VirMemUsage/mean $vpxd_profiler_log | cut -d " " -f3 | sort -n | tail -n 1)
+virt_mem_max_GB=`expr $virt_mem_max_value / 1073741824 `
+echo "Maximum Virtual Memory : $virt_mem_max_GB GB"
+
+virt_mem_first_value=$(grep /ProcessStats/VirMemUsage/mean $vpxd_profiler_log | cut -d " " -f3 | head -n 1)
+virt_mem_first_GB=`expr $virt_mem_first_value / 1073741824 `
+echo "First Virtual Memory usage logged : $virt_mem_first_GB GB"
+
+virt_mem_last_value=$(grep /ProcessStats/VirMemUsage/mean $vpxd_profiler_log | cut -d " " -f3 | tail -n 1)
+virt_mem_last_GB=`expr $virt_mem_last_value / 1073741824 `
+echo "Last Virtual Memory usage logged : $virt_mem_last_GB GB"
+
+virt_mem_delta=`expr $virt_mem_last_value - $virt_mem_first_value `
+virt_mem_delta_MB=`expr $virt_mem_delta / 1048576 `
+echo "Delta between the start and the end of the log(s) : $virt_mem_delta_MB MB"
+
+virt_mem_growth=`expr $virt_mem_delta_MB / $duration_minutes `
+echo "Average Virtual Memory growth : $virt_mem_growth MB/min"
+echo ""
+echo "----------------------------- Physical Memory -----------------------"
+echo ""
+mem_min_value=$(grep /ProcessStats/PhyMemUsage/mean $vpxd_profiler_log | cut -d " " -f3 | sort -n | head -n 1)
+mem_min_GB=`expr $mem_min_value / 1073741824 `
+echo "Minimum Physical Memory : $mem_min_GB GB"
+
+mem_max_value=$(grep /ProcessStats/PhyMemUsage/mean $vpxd_profiler_log | cut -d " " -f3 | sort -n | tail -n 1)
+mem_max_GB=`expr $mem_max_value / 1073741824 `
+echo "Maximum Physical Memory : $mem_max_GB GB"
+
+mem_first_value=$(grep /ProcessStats/PhyMemUsage/mean $vpxd_profiler_log | cut -d " " -f3 | head -n 1)
+mem_first_GB=`expr $mem_first_value / 1073741824 `
+echo "First Physical Memory usage logged : $mem_first_GB GB"
+
+mem_last_value=$(grep /ProcessStats/PhyMemUsage/mean $vpxd_profiler_log | cut -d " " -f3 | tail -n 1)
+mem_last_GB=`expr $mem_last_value / 1073741824 `
+echo "Last Physical Memory usage logged : $mem_last_GB GB"
+
+mem_delta=`expr $mem_last_value - $mem_first_value `
+mem_delta_MB=`expr $mem_delta / 1048576 `
+echo "Delta between the start and the end of the log(s) : $mem_delta_MB MB"
+
+mem_growth=`expr $mem_delta_MB / $duration_minutes `
+echo "Average Physical Memory growth : $mem_growth MB/min"
+echo ""
