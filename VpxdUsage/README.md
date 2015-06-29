@@ -3,15 +3,15 @@
 This script extract vCenter Server resource utilization from the vpxd-profiler logs in a vCenter log bundle.
 
 It extracts the following information :
-Duration covered by the specified vpxd-profiler logs
-Minimum CPU usage
-Maximum CPU usage
-Minimum virtual memory usage
-Maximum virtual memory usage
-Minimum physical memory usage
-Maximum physical memory usage
-Average virtual memory growth
-Average physical memory growth
+* Duration covered by the specified vpxd-profiler logs
+* Minimum CPU usage
+* Maximum CPU usage
+* Minimum virtual memory usage
+* Maximum virtual memory usage
+* Minimum physical memory usage
+* Maximum physical memory usage
+* Average virtual memory growth
+* Average physical memory growth
 
 
 ###Parameters :
